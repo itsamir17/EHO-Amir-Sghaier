@@ -1,0 +1,70 @@
+import numpy as np
+
+# =============================
+# Fonction objectif à minimiser
+# =============================
+def objective_function(x):
+    return np.sum(x ** 2)
+
+# =============================
+# Paramètres de l'application EHO
+# =============================
+num_elephants = 20        # nombre total d'éléphants (solutions)
+num_clans = 4             # nombre de clans
+dimensions = 2            # dimension du problème
+max_iter = 50             # nombre d’itérations
+alpha = 0.5               # facteur de déplacement vers la matriarche
+
+xmin, xmax = -10, 10      # bornes de recherche
+elephants_per_clan = num_elephants // num_clans
+
+# =============================
+# Initialisation de la population
+# =============================
+population = np.random.uniform(
+    xmin, xmax, (num_elephants, dimensions)
+)
+
+# =============================
+# Boucle principale EHO
+# =============================
+for iteration in range(max_iter):
+    new_population = population.copy()
+
+    for c in range(num_clans):
+        start = c * elephants_per_clan
+        end = start + elephants_per_clan
+        clan = population[start:end]
+
+        # Évaluation des solutions
+        fitness = np.array([objective_function(e) for e in clan])
+
+        # Sélection de la matriarche (meilleure solution)
+        best_index = np.argmin(fitness)
+        matriarch = clan[best_index]
+
+        # -------- Clan Updating Operator --------
+        for i in range(elephants_per_clan):
+            new_population[start + i] = (
+                clan[i] + alpha * (matriarch - clan[i])
+            )
+
+        # -------- Separating Operator --------
+        worst_index = np.argmax(fitness)
+        new_population[start + worst_index] = np.random.uniform(
+            xmin, xmax, dimensions
+        )
+
+    population = new_population
+
+    # Meilleure solution globale
+    best_solution = population[
+        np.argmin([objective_function(e) for e in population])
+    ]
+
+    print(
+        f"Iteration {iteration + 1} | "
+        f"Best fitness = {objective_function(best_solution):.6f}"
+    )
+
+print("\nMeilleure solution trouvée :", best_solution)
